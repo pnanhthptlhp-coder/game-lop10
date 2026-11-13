@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bắn mục tiêu Hóa học 10</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#131a2d;
+      --panel2:#1a233a;
+      --text:#f4f7ff;
+      --muted:#aeb8d0;
+      --accent:#6ee7ff;
+      --accent2:#8b5cf6;
+      --good:#34d399;
+      --bad:#fb7185;
+      --warning:#fbbf24;
+      --border:#2a3552;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(135deg,#070b16,#11182a);
+      color:var(--text);
+      min-height:100vh;
+    }
+    .wrap{
+      width:min(1180px,96%);
+      margin:auto;
+      padding:18px 0 30px;
+    }
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:14px;
+    }
+    h1{
+      margin:0;
+      font-size:clamp(22px,3vw,34px);
+    }
+    .subtitle{color:var(--muted);margin-top:5px}
+    .stats{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+    }
+    .pill{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 14px;
+      font-weight:700;
+    }
+    .question-card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      margin-bottom:14px;
+    }
+    .chapter{
+      color:var(--accent);
+      font-size:13px;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+      margin-bottom:8px;
+    }
+    .question{
+      font-size:clamp(17px,2vw,22px);
+      font-weight:700;
+      line-height:1.4;
+    }
+    .arena{
+      position:relative;
+      height:470px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:20px;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(110,231,255,.08), transparent 28%),
+        radial-gradient(circle at 80% 75%, rgba(139,92,246,.10), transparent 32%),
+        var(--panel2);
+    }
+    .target{
+      position:absolute;
+      width:135px;
+      min-height:105px;
+      border-radius:24px;
+      border:3px solid #3b4a70;
+      background:#10182a;
+      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      gap:7px;
+      cursor:pointer;
+      box-shadow:0 12px 24px rgba(0,0,0,.3);
+      transition:transform .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .target:hover{
+      transform:scale(1.05);
+      border-color:var(--accent);
+    }
+    .letter{
+      width:34px;height:34px;
+      display:grid;place-items:center;
+      border-radius:50%;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#08101f;
+      font-weight:900;
+      font-size:20px;
+    }
+    .answer{
+      font-weight:700;
+      font-size:14px;
+      text-align:center;
+      padding:0 8px;
+      line-height:1.2;
+    }
+    .countdown{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      font-size:72px;
+      font-weight:900;
+      z-index:20;
+      pointer-events:none;
+      text-shadow:0 8px 25px rgba(0,0,0,.6);
+    }
+    .feedback{
+      position:absolute;
+      top:14px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:30;
+      background:#0c1324ee;
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:10px 16px;
+      font-weight:800;
+      opacity:0;
+      transition:opacity .2s ease;
+      max-width:90%;
+      text-align:center;
+    }
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+    button.ctrl{
+      border:none;
+      border-radius:14px;
+      padding:12px 18px;
+      font-size:15px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .start{background:linear-gradient(135deg,var(--accent),#60a5fa);color:#06101a}
+    .restart{background:#24304d;color:var(--text);border:1px solid var(--border)!important}
+    .sound{background:#24304d;color:var(--text);border:1px solid var(--border)!important}
+    .finish{background:linear-gradient(135deg,#fb7185,#ef4444);color:white}
+    .result{
+      margin-top:14px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:22px;
+      text-align:center;
+      display:none;
+    }
+    .result h2{margin:0 0 8px}
+    .big-score{font-size:44px;font-weight:900;color:var(--accent)}
+    .progress{
+      height:10px;
+      background:#202a44;
+      border-radius:999px;
+      overflow:hidden;
+      margin-top:12px;
+    }
+    .progress > div{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,var(--accent),var(--accent2));
+      transition:width .25s ease;
+    }
+    @keyframes pop{
+      50%{transform:scale(1.25)}
+      100%{transform:scale(.2);opacity:0}
+    }
+    .hit{animation:pop .28s ease forwards}
+    @media(max-width:640px){
+      .arena{height:520px}
+      .target{width:118px;min-height:95px}
+      .answer{font-size:13px}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>🎯 BẮN MỤC TIÊU HÓA HỌC 10</h1>
+      <div class="subtitle">Chương 1 – Cấu tạo nguyên tử | Chương 2 – Bảng tuần hoàn | Chương 3 – Liên kết hóa học</div>
+    </div>
+    <div class="stats">
+      <div class="pill">Điểm: <span id="score">0</span></div>
+      <div class="pill">Combo: <span id="combo">0</span></div>
+      <div class="pill">Câu: <span id="qnum">1</span>/30</div>
+    </div>
+  </div>
+
+  <div class="question-card">
+    <div id="chapter" class="chapter"></div>
+    <div id="question" class="question">Nhấn “Bắt đầu chơi” để vào trận.</div>
+    <div class="progress"><div id="progressBar"></div></div>
+  </div>
+
+  <div id="arena" class="arena">
+    <div id="countdown" class="countdown"></div>
+    <div id="feedback" class="feedback"></div>
+  </div>
+
+  <div class="controls">
+    <button id="startBtn" class="ctrl start">▶ Bắt đầu chơi</button>
+    <button id="restartBtn" class="ctrl restart">↻ Chơi lại</button>
+    <button id="soundBtn" class="ctrl sound">🔊 Âm thanh: Bật</button>
+    <button id="finishBtn" class="ctrl finish">⏹ Kết thúc</button>
+  </div>
+
+  <div id="result" class="result"></div>
+</div>
+
+<script>
+const questions = [
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Hạt nào mang điện tích dương trong nguyên tử?',a:['Electron','Proton','Neutron','Nucleon'],c:1},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Số hiệu nguyên tử Z của một nguyên tố bằng số nào sau đây?',a:['Số neutron','Số proton','Tổng proton và neutron','Số lớp electron'],c:1},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Nguyên tử trung hòa có 11 proton thì có bao nhiêu electron?',a:['10','11','12','22'],c:1},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Số khối A của hạt nhân được tính bằng:',a:['A = Z + N','A = Z − N','A = Z + e','A = N − Z'],c:0},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Hai nguyên tử là đồng vị của nhau khi chúng có:',a:['Cùng số neutron','Cùng số proton, khác số neutron','Cùng số khối','Khác số proton, cùng số neutron'],c:1},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Phân lớp p có tối đa bao nhiêu electron?',a:['2','6','10','14'],c:1},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Lớp electron thứ hai có tối đa bao nhiêu electron?',a:['2','8','18','32'],c:1},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Cấu hình electron nào là của nguyên tử Na (Z = 11)?',a:['1s²2s²2p⁶3s¹','1s²2s²2p⁵3s²','1s²2s²2p⁶3s²','1s²2s²2p⁶'],c:0},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Nguyên tử có cấu hình 1s²2s²2p⁶3s²3p⁵ có bao nhiêu electron lớp ngoài cùng?',a:['2','5','7','17'],c:2},
+  {ch:'Chương 1 – Cấu tạo nguyên tử',q:'Nguyên tử X có Z = 17 và A = 35. Số neutron của X là:',a:['17','18','35','52'],c:1},
+
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Các nguyên tố trong bảng tuần hoàn được sắp xếp theo chiều tăng dần của:',a:['Nguyên tử khối','Số neutron','Điện tích hạt nhân','Số khối'],c:2},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Số thứ tự của chu kì bằng:',a:['Số electron hóa trị','Số lớp electron','Số proton','Số neutron'],c:1},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Nguyên tố có cấu hình electron 1s²2s²2p⁶3s¹ thuộc chu kì nào?',a:['1','2','3','4'],c:2},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Nguyên tố Na thuộc nhóm nào trong bảng tuần hoàn?',a:['IA','IIA','VIIA','VIIIA'],c:0},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Trong một chu kì, khi điện tích hạt nhân tăng dần, bán kính nguyên tử nhìn chung:',a:['Tăng dần','Giảm dần','Không đổi','Tăng rồi giảm'],c:1},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Trong một nhóm A, từ trên xuống dưới, tính kim loại nhìn chung:',a:['Giảm dần','Tăng dần','Không đổi','Mất hoàn toàn'],c:1},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Trong một chu kì, từ trái sang phải, độ âm điện nhìn chung:',a:['Giảm dần','Tăng dần','Không đổi','Bằng 0'],c:1},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Nguyên tố nào sau đây có tính phi kim mạnh nhất?',a:['Na','Mg','Cl','Al'],c:2},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Nguyên tố có 7 electron lớp ngoài cùng thường thuộc nhóm:',a:['IA','IIA','VIIA','VIIIA'],c:2},
+  {ch:'Chương 2 – Bảng tuần hoàn',q:'Oxide cao nhất của nguyên tố nhóm IVA thường có công thức dạng:',a:['R₂O','RO','R₂O₃','RO₂'],c:3},
+
+  {ch:'Chương 3 – Liên kết hóa học',q:'Liên kết ion được hình thành chủ yếu do:',a:['Dùng chung electron','Lực hút tĩnh điện giữa ion trái dấu','Dùng chung proton','Sự chuyển neutron'],c:1},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Khi tạo thành NaCl, nguyên tử Na có xu hướng:',a:['Nhận 1 electron','Nhường 1 electron','Nhận 2 electron','Nhường 2 electron'],c:1},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Ion Mg²⁺ được tạo thành khi nguyên tử Mg:',a:['Nhận 2 electron','Nhường 2 electron','Nhận 1 electron','Nhường 1 electron'],c:1},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Trong phân tử H₂, hai nguyên tử H liên kết với nhau bằng:',a:['Liên kết ion','Một liên kết cộng hóa trị đơn','Một liên kết đôi','Liên kết hydrogen'],c:1},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Trong phân tử O₂ có bao nhiêu cặp electron dùng chung giữa hai nguyên tử O?',a:['1','2','3','4'],c:1},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Trong phân tử N₂, hai nguyên tử N liên kết với nhau bằng:',a:['Liên kết đơn','Liên kết đôi','Liên kết ba','Liên kết ion'],c:2},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Chất nào sau đây chứa liên kết ion?',a:['H₂','Cl₂','NaCl','CO₂'],c:2},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Liên kết cộng hóa trị thường hình thành giữa:',a:['Hai nguyên tử phi kim','Hai ion dương','Kim loại và kim loại','Hai neutron'],c:0},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Trong phân tử HCl, cặp electron liên kết bị lệch về phía Cl chủ yếu vì:',a:['Cl có bán kính lớn hơn','Cl có độ âm điện lớn hơn H','H có nhiều electron hơn','Cl có ít proton hơn H'],c:1},
+  {ch:'Chương 3 – Liên kết hóa học',q:'Liên kết hydrogen có thể hình thành khi H liên kết trực tiếp với nguyên tử có độ âm điện lớn như:',a:['Na, K, Ca','F, O, N','Mg, Al, Si','Cl, Br, I'],c:1}
+];
+
+const letters=['A','B','C','D'];
+const arena=document.getElementById('arena');
+const scoreEl=document.getElementById('score');
+const comboEl=document.getElementById('combo');
+const qnumEl=document.getElementById('qnum');
+const questionEl=document.getElementById('question');
+const chapterEl=document.getElementById('chapter');
+const feedback=document.getElementById('feedback');
+const countdown=document.getElementById('countdown');
+const progressBar=document.getElementById('progressBar');
+const result=document.getElementById('result');
+
+let qi=0, score=0, combo=0, playing=false, ended=false, soundOn=true, audioCtx=null, movers=[];
+
+function tone(freq=440,dur=.12,type='sine',gain=.06){
+  if(!soundOn) return;
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator();
+    const g=audioCtx.createGain();
+    o.type=type;
+    o.frequency.value=freq;
+    g.gain.value=gain;
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    const t=audioCtx.currentTime;
+    g.gain.setValueAtTime(gain,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.start(t);
+    o.stop(t+dur);
+  }catch(e){}
+}
+function sfx(type){
+  if(type==='shot') tone(180,.05,'square',.03);
+  if(type==='correct'){tone(650,.08);setTimeout(()=>tone(900,.13),80);}
+  if(type==='wrong') tone(150,.18,'sawtooth',.04);
+  if(type==='win'){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,.18),i*100));}
+}
+function clearTargets(){
+  movers.forEach(m=>cancelAnimationFrame(m.raf));
+  movers=[];
+  document.querySelectorAll('.target').forEach(el=>el.remove());
+}
+function showFeedback(text){
+  feedback.textContent=text;
+  feedback.style.opacity='1';
+  clearTimeout(feedback.timer);
+  feedback.timer=setTimeout(()=>feedback.style.opacity='0',1000);
+}
+function updateProgress(){
+  progressBar.style.width=((qi/questions.length)*100)+'%';
+}
+function spawnTargets(){
+  if(ended) return;
+  clearTargets();
+  const q=questions[qi];
+  chapterEl.textContent=q.ch;
+  questionEl.textContent=q.q;
+  qnumEl.textContent=qi+1;
+  updateProgress();
+
+  const W=Math.max(320,arena.clientWidth);
+  const H=arena.clientHeight;
+  const positions=[[.06,.20],[.58,.18],[.11,.63],[.62,.61]];
+
+  q.a.forEach((ans,i)=>{
+    const btn=document.createElement('button');
+    btn.className='target';
+    btn.type='button';
+    btn.innerHTML=`<span class="letter">${letters[i]}</span><span class="answer">${ans}</span>`;
+    let x=Math.max(4,Math.min(W-140,positions[i][0]*W));
+    let y=Math.max(58,Math.min(H-110,positions[i][1]*H));
+    let vx=(Math.random()>.5?1:-1)*(0.28+Math.random()*0.35);
+    let vy=(Math.random()>.5?1:-1)*(0.18+Math.random()*0.28);
+    btn.style.left=x+'px';
+    btn.style.top=y+'px';
+    arena.appendChild(btn);
+
+    const mover={el:btn,raf:0};
+    movers.push(mover);
+
+    function move(){
+      if(!playing || ended || !btn.isConnected) return;
+      const maxX=Math.max(0,arena.clientWidth-140);
+      const maxY=Math.max(60,arena.clientHeight-110);
+      x+=vx; y+=vy;
+      if(x<0||x>maxX){vx*=-1;x=Math.max(0,Math.min(x,maxX));}
+      if(y<60||y>maxY){vy*=-1;y=Math.max(60,Math.min(y,maxY));}
+      btn.style.left=x+'px';
+      btn.style.top=y+'px';
+      mover.raf=requestAnimationFrame(move);
+    }
+    mover.raf=requestAnimationFrame(move);
+
+    btn.addEventListener('click',()=>shoot(i,btn));
+  });
+}
+function shoot(i,btn){
+  if(!playing || ended) return;
+  sfx('shot');
+  const q=questions[qi];
+  if(i===q.c){
+    combo++;
+    const bonus=10+Math.min(combo*2,10);
+    score+=bonus;
+    scoreEl.textContent=score;
+    comboEl.textContent=combo;
+    btn.classList.add('hit');
+    sfx('correct');
+    showFeedback(combo>=3?`🔥 Combo x${combo}! +${bonus} điểm`:`✅ Chính xác! +${bonus} điểm`);
+    playing=false;
+    setTimeout(nextQuestion,650);
+  }else{
+    combo=0;
+    comboEl.textContent='0';
+    score=Math.max(0,score-2);
+    scoreEl.textContent=score;
+    sfx('wrong');
+    showFeedback('❌ Chưa đúng! Hãy bắn mục tiêu khác.');
+  }
+}
+function nextQuestion(){
+  qi++;
+  if(qi>=questions.length){
+    finishGame(false);
+    return;
+  }
+  playing=true;
+  spawnTargets();
+}
+function finishGame(manual=true){
+  if(ended && manual) return;
+  ended=true;
+  playing=false;
+  clearTargets();
+  countdown.textContent='';
+  progressBar.style.width=(manual ? (qi/questions.length)*100 : 100)+'%';
+
+  if(!manual) sfx('win');
+
+  const completed=manual ? qi : questions.length;
+  let rank='💪 Cần luyện thêm';
+  if(score>=360) rank='🏆 Xuất sắc';
+  else if(score>=300) rank='⭐ Rất tốt';
+  else if(score>=230) rank='👍 Khá tốt';
+
+  result.style.display='block';
+  result.innerHTML=`
+    <h2>${manual ? 'Đã kết thúc trò chơi' : 'Hoàn thành 30 câu!'}</h2>
+    <div class="big-score">${score} điểm</div>
+    <div style="margin-top:8px;font-weight:700">${rank}</div>
+    <div style="margin-top:8px;color:var(--muted)">
+      Đã hoàn thành ${completed}/${questions.length} câu.
+    </div>
+  `;
+  questionEl.textContent=manual ? 'Trò chơi đã được kết thúc.' : 'Bạn đã hoàn thành toàn bộ 30 câu!';
+  chapterEl.textContent='';
+}
+function resetGame(){
+  ended=false;
+  playing=false;
+  qi=0;
+  score=0;
+  combo=0;
+  scoreEl.textContent='0';
+  comboEl.textContent='0';
+  qnumEl.textContent='1';
+  chapterEl.textContent='';
+  questionEl.textContent='Nhấn “Bắt đầu chơi” để vào trận.';
+  countdown.textContent='';
+  progressBar.style.width='0%';
+  result.style.display='none';
+  clearTargets();
+}
+function startGame(){
+  resetGame();
+  let n=3;
+  countdown.textContent='3';
+  tone(420,.06,'square',.035);
+  const timer=setInterval(()=>{
+    n--;
+    if(n>0){
+      countdown.textContent=n;
+      tone(420,.06,'square',.035);
+    }else{
+      clearInterval(timer);
+      countdown.textContent='GO!';
+      tone(900,.12,'square',.05);
+      setTimeout(()=>{
+        countdown.textContent='';
+        playing=true;
+        spawnTargets();
+      },450);
+    }
+  },600);
+}
+
+document.getElementById('startBtn').addEventListener('click',startGame);
+document.getElementById('restartBtn').addEventListener('click',startGame);
+document.getElementById('soundBtn').addEventListener('click',function(){
+  soundOn=!soundOn;
+  this.textContent=(soundOn?'🔊':'🔇')+' Âm thanh: '+(soundOn?'Bật':'Tắt');
+});
+document.getElementById('finishBtn').addEventListener('click',()=>finishGame(true));
+
+resetGame();
+</script>
+</body>
+</html>
